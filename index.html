@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n 에이전트 챗봇</title>
+    <!-- Tailwind CSS를 사용하지 않고 일반 CSS로 디자인을 적용했습니다. -->
+    <style>
+        /* CSS for a modern, 'pretty' chat look */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 400px; /* Standard phone-like width */
+            height: 600px; /* Standard phone-like height */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #ffffff;
+            /* 모바일 뷰포트에서 전체를 차지하도록 설정 */
+            margin: 10px;
+            max-height: calc(100vh - 20px);
+        }
+
+        .chat-header {
+            background-color: #4CAF50; /* Green header */
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .chat-box {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 80%;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #DCF8C6; /* Light green for user */
+            color: #000;
+            border-bottom-right-radius: 4px; /* Slight adjustment for bubble look */
+        }
+
+        .agent-message {
+            align-self: flex-start;
+            background-color: #f1f0f0; /* Light gray for agent */
+            color: #000;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .error-message {
+            background-color: #fdd;
+            border: 1px solid #c00;
+            color: #c00;
+            white-space: pre-wrap; /* 줄 바꿈 유지 */
+            font-size: 0.9em;
+        }
+        
+        /* 로딩 애니메이션 */
+        .loading-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin: 0 1px;
+            border-radius: 50%;
+            background-color: #666;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        .input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .input-area input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .input-area button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        .input-area button:hover {
+            background-color: #45a049;
+        }
+        
+        .input-area button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">n8n 챗봇 에이전트</div>
+    <div class="chat-box" id="chatBox">
+        <!-- 초기 환영 메시지 -->
+        <div class="message agent-message">안녕하세요! n8n 에이전트 챗봇입니다. 무엇을 도와드릴까요?</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="메시지를 입력하세요..." autofocus>
+        <button id="sendButton" disabled>보내기</button>
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+    
+    // 🌟 사용자가 제공한 n8n 웹훅 URL
+    const WEBHOOK_URL = 'https://n8n.revparkjw.top/webhook/96fd32ab-f9c2-4c8e-b965-57a8f734a5a1/chat';
+
+    // 💡 세션 ID를 저장할 변수
+    let currentSessionId = null; 
+
+    // UUID를 생성하는 간단한 fallback 함수
+    function generateUUID() {
+      // 간단한 UUID 생성 로직 (crypto.randomUUID가 없는 환경 대비)
+      let dt = new Date().getTime();
+      let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        let r = (dt + Math.random() * 16) % 16 | 0;
+        dt = Math.floor(dt / 16);
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+      return uuid;
+    }
+
+    function ensureSessionId() {
+        if (!currentSessionId) {
+            // crypto.randomUUID가 있으면 사용하고, 없으면 fallback 함수 사용
+            currentSessionId = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : generateUUID();
+            console.log("Session ID generated for this session:", currentSessionId);
+            // 채팅창에 세션 시작 정보를 표시하여 사용자에게 안내합니다.
+            addMessage(`(챗 세션이 시작되었습니다. ID: ${currentSessionId.substring(0, 8)}... 페이지 새로고침 시 초기화됩니다.)`, 'agent', false, false);
+        }
+    }
+    
+    // 🌟 추가된 함수: 간단한 마크다운을 HTML로 변환합니다.
+    function simpleMarkdownToHtml(markdown) {
+        // 1. 줄 바꿈 (\n)을 HTML <br> 태그로 변환 (목록 가독성 향상)
+        let html = markdown.replace(/\n/g, '<br>');
+        
+        // 2. 볼드체 (**text**)를 HTML <b>text</b>로 변환
+        html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+        return html;
+    }
+
+
+    // 메시지를 채팅창에 추가하는 함수
+    function addMessage(content, sender, isRawHtml = false, isError = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.classList.add(sender === 'user' ? 'user-message' : 'agent-message');
+        
+        if (isError) {
+            messageDiv.classList.add('error-message');
+        }
+        
+        if (isError) {
+            // 오류 메시지는 텍스트 그대로 표시
+            messageDiv.textContent = content;
+        } else if (isRawHtml) {
+            // 로딩 스피너 등 미리 정의된 HTML은 그대로 표시
+            messageDiv.innerHTML = content;
+        } else if (sender === 'agent') {
+            // 🌟 에이전트 메시지는 마크다운 변환 후 HTML로 표시
+            messageDiv.innerHTML = simpleMarkdownToHtml(content);
+        } else {
+            // 사용자 메시지 등 일반 텍스트는 텍스트 그대로 표시
+            messageDiv.textContent = content;
+        }
+        
+        chatBox.appendChild(messageDiv);
+        
+        // 스크롤을 맨 아래로 이동
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return messageDiv;
+    }
+
+    // 로딩 메시지(점 3개 애니메이션)를 표시하는 함수
+    function showLoadingMessage() {
+        const loadingContent = `
+            답변 생성 중
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+        `;
+        return addMessage(loadingContent, 'agent', true);
+    }
+    
+    // 메시지 입력 상태 확인 및 버튼 활성화/비활성화
+    function checkInput() {
+        sendButton.disabled = userInput.value.trim() === '';
+    }
+    
+    // 초기 버튼 상태 설정
+    checkInput();
+    userInput.addEventListener('input', checkInput);
+
+
+    // 메시지 전송 및 n8n 웹훅 호출
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (message === '') return;
+        
+        // 1. 사용자 메시지 표시
+        addMessage(message, 'user');
+        userInput.value = ''; // 입력창 비우기
+        checkInput(); // 버튼 비활성화
+
+        // 2. 로딩 메시지 표시
+        const loadingMessageDiv = showLoadingMessage();
+        
+        // 입력 및 버튼 비활성화
+        userInput.disabled = true;
+        sendButton.disabled = true;
+
+        // 🚨 세션 ID가 있는지 확인 및 생성 (안전 장치)
+        ensureSessionId();
+
+        let agentResponseText = '';
+        let isError = false;
+
+        try {
+            // 3. n8n 웹훅으로 메시지 전송
+            const response = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // 'chatInput'과 'sessionId'를 함께 보냅니다.
+                body: JSON.stringify({ 
+                    chatInput: message, 
+                    sessionId: currentSessionId 
+                }),
+            });
+            
+            if (!response.ok) {
+                isError = true;
+                // --- 🚨 오류 처리 로직 개선 시작 ---
+                let errorBody;
+                try {
+                    // 1. JSON 형식으로 파싱 시도
+                    errorBody = await response.json();
+                    agentResponseText = `🚨 n8n 서버 오류 (상태: ${response.status})\n\n[오류 내용]\n${JSON.stringify(errorBody, null, 2)}`;
+                } catch {
+                    // 2. JSON 파싱 실패 시, 일반 텍스트로 읽기
+                    errorBody = await response.text();
+                    agentResponseText = `🚨 n8n 서버 오류 (상태: ${response.status})\n\n[오류 내용]\n${errorBody}`;
+                }
+                // --- 🚨 오류 처리 로직 개선 끝 ---
+            } else {
+                // 응답이 OK (Status 200)인 경우
+                const data = await response.json();
+                
+                // 4. 응답 텍스트 추출 및 표시
+                // 'output' 필드를 먼저 확인하고, 없으면 'text', 그것도 없으면 전체 JSON을 표시합니다.
+                agentResponseText = data.output || data.text || JSON.stringify(data, null, 2); 
+            }
+
+        } catch (error) {
+            // 이 catch 블록은 네트워크 오류나 예상치 못한 오류를 처리합니다.
+            console.error('Network or unexpected error:', error);
+            agentResponseText = `죄송합니다. 네트워크 연결 또는 예상치 못한 오류가 발생했습니다. (콘솔 확인)`;
+            isError = true;
+        } finally {
+            // 5. 로딩 메시지를 실제 응답으로 대체
+            loadingMessageDiv.remove(); // 이전 로딩 메시지 제거
+            addMessage(agentResponseText, 'agent', false, isError);
+            
+            // 6. 입력 및 버튼 다시 활성화
+            userInput.disabled = false;
+            userInput.focus(); // 다시 입력할 수 있도록 포커스 이동
+            checkInput(); // 입력 값에 따라 버튼 상태 업데이트
+        }
+    }
+
+    // Event Listeners
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter' && !sendButton.disabled) {
+            sendMessage();
+        }
+    });
+    
+    // 💡 페이지 로드 시 세션 ID를 초기화합니다.
+    ensureSessionId();
+
+</script>
+
+</body>
+</html>
