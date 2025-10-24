@@ -4,34 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>n8n 에이전트 챗봇</title>
-    <!-- Tailwind CSS를 사용하지 않고 일반 CSS로 디자인을 적용했습니다. -->
     <style>
-        /* CSS for a modern, 'pretty' chat look */
+        /* 🌟 iOS 안전 영역(Safe Area) 처리를 위한 HTML, BODY 스타일 수정 */
+        html, body {
+            height: 100%; /* 전체 높이 사용 */
+            margin: 0; /* 기본 마진 제거 */
+            overflow: hidden; /* 스크롤 방지 */
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
+            
+            /* 100dvh는 모바일 환경에서 100vh보다 정확한 높이를 제공 */
+            min-height: 100dvh; 
+            min-height: 100vh; /* Fallback */
+
+            /* 💡 핵심 수정: iOS Safe Area Insets 적용 */
+            padding-top: constant(safe-area-inset-top);
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: constant(safe-area-inset-bottom);
+            padding-bottom: env(safe-area-inset-bottom);
+            
+            /* 컨테이너를 수직으로 정렬하기 위한 설정 */
+            flex-direction: column; 
         }
 
         .chat-container {
             width: 100%;
-            max-width: 400px; /* Standard phone-like width */
-            height: 600px; /* Standard phone-like height */
+            max-width: 400px; 
+            /* 💡 수정: max-height 대신 flex-grow와 height 100% 사용 */
+            height: 100%; /* 사용 가능한 높이를 모두 채움 */
+            flex-grow: 1; /* body 내부에서 남은 공간을 채우도록 함 */
+
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             background-color: #ffffff;
-            /* 모바일 뷰포트에서 전체를 차지하도록 설정 */
-            margin: 10px;
-            max-height: calc(100vh - 20px);
+            
+            /* 💡 수정: 모바일 환경에서 여백 제거 */
+            margin: 0; 
         }
-
+        
+        /* 모바일 환경에서는 그림자와 모서리 둥글기를 제거하여 앱처럼 보이게 함 */
+        @media (max-width: 400px) {
+            .chat-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+        
+        /* 나머지 스타일 유지 */
         .chat-header {
             background-color: #4CAF50; /* Green header */
             color: white;
@@ -183,7 +211,7 @@
         }
     }
     
-    // 🌟 추가된 함수: 간단한 마크다운을 HTML로 변환합니다.
+    // 🌟 간단한 마크다운을 HTML로 변환합니다.
     function simpleMarkdownToHtml(markdown) {
         // 1. 줄 바꿈 (\n)을 HTML <br> 태그로 변환 (목록 가독성 향상)
         let html = markdown.replace(/\n/g, '<br>');
