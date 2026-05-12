@@ -5,119 +5,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>n8n 에이전트 챗봇</title>
     <style>
-        /* 🌟 iOS 안전 영역(Safe Area) 처리를 위한 HTML, BODY 스타일 수정 */
+        :root {
+            --page-bg: #eef3f0;
+            --panel-bg: #ffffff;
+            --panel-border: #d9e3dd;
+            --header-bg: #1f5f54;
+            --header-accent: #a9d6c3;
+            --text-main: #1f2933;
+            --text-muted: #6b7a73;
+            --agent-bg: #f4f7f5;
+            --user-bg: #d9f2df;
+            --user-border: #b8dec1;
+            --button-bg: #2f7d68;
+            --button-hover: #286b5a;
+            --danger-bg: #fff0f0;
+            --danger-border: #e4a7a7;
+            --danger-text: #a22424;
+        }
+
         html, body {
-            height: 100%; /* 전체 높이 사용 */
-            margin: 0; /* 기본 마진 제거 */
-            overflow: hidden; /* 스크롤 방지 */
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
+            font-family: "Segoe UI", "Noto Sans KR", Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                linear-gradient(135deg, rgba(31, 95, 84, 0.12), transparent 42%),
+                linear-gradient(315deg, rgba(169, 214, 195, 0.24), transparent 44%),
+                var(--page-bg);
             display: flex;
             justify-content: center;
             align-items: center;
+            box-sizing: border-box;
             
-            /* 100dvh는 모바일 환경에서 100vh보다 정확한 높이를 제공 */
             min-height: 100dvh; 
-            min-height: 100vh; /* Fallback */
+            min-height: 100vh;
 
-            /* 💡 핵심 수정: iOS Safe Area Insets 적용 */
             padding-top: constant(safe-area-inset-top);
             padding-top: env(safe-area-inset-top);
             padding-bottom: constant(safe-area-inset-bottom);
             padding-bottom: env(safe-area-inset-bottom);
-            
-            /* 컨테이너를 수직으로 정렬하기 위한 설정 */
             flex-direction: column; 
         }
 
         .chat-container {
-            width: 100%;
-            max-width: 400px; 
-            /* 💡 수정: max-height 대신 flex-grow와 height 100% 사용 */
-            height: 100%; /* 사용 가능한 높이를 모두 채움 */
-            flex-grow: 1; /* body 내부에서 남은 공간을 채우도록 함 */
-
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
+            width: min(100%, clamp(360px, 92vw, 960px));
+            height: min(100%, 100dvh);
+            min-height: 0;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 22px 60px rgba(24, 49, 43, 0.16);
+            border-radius: 18px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            background-color: #ffffff;
-            
-            /* 💡 수정: 모바일 환경에서 여백 제거 */
-            margin: 0; 
+            background-color: var(--panel-bg);
+            margin: 0;
         }
         
-        /* 모바일 환경에서는 그림자와 모서리 둥글기를 제거하여 앱처럼 보이게 함 */
-        @media (max-width: 400px) {
+        @media (max-width: 640px) {
             .chat-container {
+                width: 100%;
+                height: 100%;
+                border: 0;
                 box-shadow: none;
                 border-radius: 0;
             }
         }
         
-        /* 나머지 스타일 유지 */
         .chat-header {
-            background-color: #4CAF50; /* Green header */
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 36%),
+                var(--header-bg);
             color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: bold;
+            padding: 18px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-title {
+            margin: 0;
+            font-size: clamp(1.05rem, 2vw, 1.3rem);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+
+        .header-subtitle {
+            margin-top: 5px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+
+        .status-badge {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #edf8f3;
+            font-size: 0.86rem;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--header-accent);
+            box-shadow: 0 0 0 4px rgba(169, 214, 195, 0.16);
         }
 
         .chat-box {
             flex-grow: 1;
-            padding: 15px;
+            min-height: 0;
+            padding: 22px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            gap: 12px;
+            background:
+                linear-gradient(180deg, rgba(244, 247, 245, 0.75), rgba(255, 255, 255, 0.92));
         }
 
         .message {
-            max-width: 80%;
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            border-radius: 18px;
-            line-height: 1.4;
+            max-width: min(78%, 680px);
+            padding: 12px 15px;
+            border-radius: 16px;
+            line-height: 1.55;
             word-wrap: break-word;
             opacity: 1;
             transition: opacity 0.5s ease;
+            box-shadow: 0 8px 20px rgba(31, 41, 51, 0.06);
         }
 
         .user-message {
             align-self: flex-end;
-            background-color: #DCF8C6; /* Light green for user */
-            color: #000;
-            border-bottom-right-radius: 4px; /* Slight adjustment for bubble look */
+            background-color: var(--user-bg);
+            border: 1px solid var(--user-border);
+            color: var(--text-main);
+            border-bottom-right-radius: 5px;
         }
 
         .agent-message {
             align-self: flex-start;
-            background-color: #f1f0f0; /* Light gray for agent */
-            color: #000;
-            border-bottom-left-radius: 4px;
+            background-color: var(--agent-bg);
+            border: 1px solid #e2e9e5;
+            color: var(--text-main);
+            border-bottom-left-radius: 5px;
         }
         
         .error-message {
-            background-color: #fdd;
-            border: 1px solid #c00;
-            color: #c00;
-            white-space: pre-wrap; /* 줄 바꿈 유지 */
+            background-color: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: var(--danger-text);
+            white-space: pre-wrap;
             font-size: 0.9em;
         }
         
-        /* 로딩 애니메이션 */
         .loading-dot {
             display: inline-block;
             width: 8px;
             height: 8px;
             margin: 0 1px;
             border-radius: 50%;
-            background-color: #666;
+            background-color: var(--text-muted);
             animation: bounce 1.4s infinite ease-in-out both;
         }
         .loading-dot:nth-child(1) { animation-delay: -0.32s; }
@@ -130,51 +185,104 @@
 
         .input-area {
             display: flex;
-            padding: 10px;
-            border-top: 1px solid #eee;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-top: 1px solid #e6eee9;
+            background-color: rgba(255, 255, 255, 0.96);
         }
 
         .input-area input {
             flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            margin-right: 10px;
+            min-width: 0;
+            padding: 13px 15px;
+            border: 1px solid #cfdad4;
+            border-radius: 12px;
             font-size: 1em;
             outline: none;
+            color: var(--text-main);
+            background-color: #fbfdfc;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+        }
+
+        .input-area input:focus {
+            border-color: var(--button-bg);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(47, 125, 104, 0.12);
         }
 
         .input-area button {
-            background-color: #4CAF50;
+            flex: 0 0 auto;
+            background-color: var(--button-bg);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 20px;
+            padding: 13px 18px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1em;
+            font-weight: 700;
             transition: background-color 0.3s, transform 0.1s;
         }
 
         .input-area button:hover {
-            background-color: #45a049;
+            background-color: var(--button-hover);
         }
         
         .input-area button:active {
             transform: scale(0.98);
+        }
+
+        .input-area button:disabled {
+            cursor: not-allowed;
+            background-color: #aebbb5;
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        @media (max-width: 640px) {
+            .chat-header {
+                padding: 16px;
+                align-items: flex-start;
+            }
+
+            .header-subtitle {
+                font-size: 0.82rem;
+            }
+
+            .status-badge {
+                font-size: 0.78rem;
+            }
+
+            .chat-box {
+                padding: 16px;
+            }
+
+            .message {
+                max-width: 88%;
+            }
+
+            .input-area {
+                padding: 12px;
+            }
         }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
-    <div class="chat-header">n8n 챗봇 에이전트</div>
+    <div class="chat-header">
+        <div>
+            <h1 class="header-title">목회관리 AI 비서</h1>
+            <div class="header-subtitle">필요한 내용을 편하게 물어보세요</div>
+        </div>
+        <div class="status-badge"><span class="status-dot"></span>온라인</div>
+    </div>
     <div class="chat-box" id="chatBox">
         <!-- 초기 환영 메시지 -->
-        <div class="message agent-message">안녕하세요! n8n 에이전트 챗봇입니다. 무엇을 도와드릴까요?</div>
+        <div class="message agent-message">안녕하세요. 무엇을 도와드릴까요?</div>
     </div>
     <div class="input-area">
         <input type="text" id="userInput" placeholder="메시지를 입력하세요..." autofocus>
-        <button id="sendButton" disabled>보내기</button>
+        <button id="sendButton" disabled>전송</button>
     </div>
 </div>
 
@@ -206,8 +314,6 @@
             // crypto.randomUUID가 있으면 사용하고, 없으면 fallback 함수 사용
             currentSessionId = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : generateUUID();
             console.log("Session ID generated for this session:", currentSessionId);
-            // 채팅창에 세션 시작 정보를 표시하여 사용자에게 안내합니다.
-            addMessage(`(챗 세션이 시작되었습니다. ID: ${currentSessionId.substring(0, 8)}... 페이지 새로고침 시 초기화됩니다.)`, 'agent', false, false);
         }
     }
     
@@ -264,6 +370,32 @@
         `;
         return addMessage(loadingContent, 'agent', true);
     }
+
+    function parseN8nResponseBody(bodyText) {
+        const trimmedBody = bodyText.trim();
+        if (!trimmedBody) return '';
+
+        try {
+            const data = JSON.parse(trimmedBody);
+            return data.output || data.text || JSON.stringify(data, null, 2);
+        } catch {
+            const chunks = trimmedBody
+                .split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(Boolean)
+                .map(line => {
+                    try {
+                        return JSON.parse(line);
+                    } catch {
+                        return null;
+                    }
+                })
+                .filter(item => item && item.type === 'item' && typeof item.content === 'string')
+                .map(item => item.content);
+
+            return chunks.length > 0 ? chunks.join('') : trimmedBody;
+        }
+    }
     
     // 메시지 입력 상태 확인 및 버튼 활성화/비활성화
     function checkInput() {
@@ -312,27 +444,13 @@
                 }),
             });
             
+            const responseText = await response.text();
+
             if (!response.ok) {
                 isError = true;
-                // --- 🚨 오류 처리 로직 개선 시작 ---
-                let errorBody;
-                try {
-                    // 1. JSON 형식으로 파싱 시도
-                    errorBody = await response.json();
-                    agentResponseText = `🚨 n8n 서버 오류 (상태: ${response.status})\n\n[오류 내용]\n${JSON.stringify(errorBody, null, 2)}`;
-                } catch {
-                    // 2. JSON 파싱 실패 시, 일반 텍스트로 읽기
-                    errorBody = await response.text();
-                    agentResponseText = `🚨 n8n 서버 오류 (상태: ${response.status})\n\n[오류 내용]\n${errorBody}`;
-                }
-                // --- 🚨 오류 처리 로직 개선 끝 ---
+                agentResponseText = `🚨 n8n 서버 오류 (상태: ${response.status})\n\n[오류 내용]\n${parseN8nResponseBody(responseText)}`;
             } else {
-                // 응답이 OK (Status 200)인 경우
-                const data = await response.json();
-                
-                // 4. 응답 텍스트 추출 및 표시
-                // 'output' 필드를 먼저 확인하고, 없으면 'text', 그것도 없으면 전체 JSON을 표시합니다.
-                agentResponseText = data.output || data.text || JSON.stringify(data, null, 2); 
+                agentResponseText = parseN8nResponseBody(responseText);
             }
 
         } catch (error) {
