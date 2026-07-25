@@ -1,15 +1,159 @@
 <!doctype html>
 <html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>신앙상담</title>
-<style>@font-face{font-family:Pretendard;src:url('fonts/Pretendard-Regular.woff2') format('woff2');font-weight:400;font-display:swap}@font-face{font-family:Pretendard;src:url('fonts/Pretendard-SemiBold.woff2') format('woff2');font-weight:500 700;font-display:swap}
-:root{font-family:Pretendard,Circular,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#222;background:#fff}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(100%,680px);padding:32px;background:#fff;border:1px solid #ddd;border-radius:14px;box-shadow:rgba(0,0,0,.02) 0 0 0 1px,rgba(0,0,0,.04) 0 2px 6px,rgba(0,0,0,.1) 0 4px 8px}.head{display:flex;justify-content:space-between;gap:16px;align-items:start}.eyebrow{margin:0;color:#6a6a6a;font-size:12px;font-weight:700;letter-spacing:.32px}.reset{width:auto;min-height:40px;margin:0;padding:8px 14px;border:1px solid #222;border-radius:8px;background:#fff;color:#222;font-size:14px;font-weight:500;cursor:pointer}h1{margin:8px 0;font-size:28px;line-height:1.3}label{display:block;margin:24px 0 8px;font-weight:600}textarea{width:100%;min-height:180px;padding:14px 12px;border:1px solid #ddd;border-radius:8px;font:inherit;resize:vertical}textarea:focus{outline:0;border:2px solid #222;padding:13px 11px}button{width:100%;min-height:48px;margin-top:16px;padding:14px 24px;border:0;border-radius:8px;background:#ff385c;color:#fff;font:inherit;font-weight:500;cursor:pointer}button:disabled{background:#ffd1da;cursor:wait}.answer{margin-top:28px;padding:20px;background:#f7f7f7;border-radius:14px}.answer h2{margin:0 0 8px;font-size:20px}.answer p{margin:0;white-space:pre-wrap;line-height:1.7}@media(max-width:520px){body{padding:0}.card{min-height:100vh;border:0;border-radius:0;padding:24px}.head{align-items:center}h1{font-size:24px}}
-</style>
-</head>
-<body><main class="card"><div class="head"><div><p class="eyebrow">FAITH COUNSELING</p><h1>마음을 나누어 주세요</h1></div><button id="reset-button" class="reset" type="button">새 상담</button></div><form id="counseling-form"><label for="message">상담 내용</label><textarea id="message" required placeholder="지금 마음에 있는 이야기를 적어 주세요."></textarea><button id="send-button">상담 보내기</button></form><section class="answer" aria-live="polite"><h2>상담 결과</h2><p id="answer">상담 내용을 보내면 이곳에 답변이 표시됩니다.</p></section></main><script>
-const url="https://n8n.revparkjw.top/webhook/af8097bd-65bf-4cc2-81a9-b3d270e44b41",form=document.querySelector("#counseling-form"),message=document.querySelector("#message"),button=document.querySelector("#send-button"),answer=document.querySelector("#answer"),reset=document.querySelector("#reset-button"),initial="상담 내용을 보내면 이곳에 답변이 표시됩니다.";
-reset.addEventListener("click",()=>{message.value="";answer.textContent=initial;message.focus()});
-form.addEventListener("submit",async e=>{e.preventDefault();const text=message.value.trim();if(!text){answer.textContent="상담 내용을 입력해 주세요.";return}button.disabled=true;answer.textContent="상담 내용을 전송하고 있습니다…";try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text})});if(!r.ok)throw Error();const data=await r.json();if(typeof data.answer!=="string"||!data.answer.trim())throw Error();answer.textContent=data.answer}catch{answer.textContent="상담 결과를 받지 못했습니다. 잠시 후 다시 시도해 주세요."}finally{button.disabled=false}});
-</script></body></html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마음 상담</title>
+    <style>
+      @font-face { font-family: Pretendard; src: url('fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+      @font-face { font-family: Pretendard; src: url('fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+      :root { color: #222; background: #fff; font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      * { box-sizing: border-box; }
+      body { min-width: 320px; margin: 0; background: linear-gradient(150deg, #fff7f8 0, #fff 35%, #fff 100%); }
+      button, textarea { font: inherit; }
+      .page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 52px 0 64px; }
+      .masthead { margin-bottom: 30px; }
+      .eyebrow { margin: 0 0 10px; color: #ff385c; font-size: 13px; font-weight: 600; letter-spacing: .06em; }
+      h1 { margin: 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.18; letter-spacing: -.04em; }
+      .lead { max-width: 620px; margin: 14px 0 0; color: #6a6a6a; font-size: 16px; line-height: 1.65; }
+      .workspace { display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr); gap: 24px; align-items: stretch; }
+      .panel { min-height: 540px; padding: 28px; border: 1px solid #ebebeb; border-radius: 20px; background: rgba(255,255,255,.95); box-shadow: rgba(0,0,0,.02) 0 0 0 1px, rgba(0,0,0,.04) 0 2px 6px, rgba(0,0,0,.08) 0 8px 20px; }
+      .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+      h2 { margin: 0; font-size: 20px; line-height: 1.3; letter-spacing: -.02em; }
+      .panel-note { margin: 6px 0 0; color: #6a6a6a; font-size: 14px; line-height: 1.5; }
+      label { display: block; margin-bottom: 9px; font-size: 14px; font-weight: 600; }
+      textarea { display: block; width: 100%; min-height: 306px; resize: vertical; padding: 16px; border: 1px solid #ddd; border-radius: 14px; outline: 0; color: #222; background: #fff; line-height: 1.65; }
+      textarea:focus { border: 2px solid #222; padding: 15px; }
+      .actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+      .button { min-height: 48px; padding: 12px 18px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; font-weight: 600; transition: background-color .15s ease, transform .15s ease; }
+      .button:focus-visible { outline: 3px solid #222; outline-offset: 2px; }
+      .button:active { transform: scale(.98); }
+      .button-primary { flex: 1; color: #fff; background: #d60a3b; }
+      .button-primary:hover { background: #b90732; }
+      .button-secondary { color: #222; background: #fff; border-color: #ddd; }
+      .button-secondary:hover { background: #f7f7f7; }
+      .result-panel { display: flex; flex-direction: column; }
+      .answer { flex: 1; padding: 4px 0; color: #3f3f3f; font-size: 16px; line-height: 1.72; overflow-wrap: anywhere; }
+      .answer:empty::before { content: '상담 내용을 보내시면, 여기에 답변이 표시됩니다.'; color: #6a6a6a; }
+      .answer h1, .answer h2, .answer h3, .answer h4, .answer h5, .answer h6 { margin: 20px 0 10px; font-size: 1.14em; }
+      .answer h1:first-child, .answer h2:first-child, .answer h3:first-child { margin-top: 0; }
+      .answer p, .answer ul, .answer ol, .answer blockquote, .answer pre { margin: 0 0 16px; }
+      .answer ul, .answer ol { padding-left: 24px; }
+      .answer blockquote { padding: 8px 14px; border-left: 3px solid #ff385c; color: #6a6a6a; background: #fff7f8; }
+      .answer pre { overflow-x: auto; padding: 14px; border-radius: 10px; background: #f7f7f7; font-size: 13px; }
+      .answer code { padding: 1px 4px; border-radius: 4px; background: #f2f2f2; font-size: .9em; }
+      .answer pre code { padding: 0; background: transparent; }
+      .answer a { color: #c13515; }
+      .status { min-height: 20px; margin: 14px 0 0; color: #6a6a6a; font-size: 13px; line-height: 1.5; }
+      .status.error { color: #c13515; }
+      .answer-actions { margin-top: 18px; padding-top: 18px; border-top: 1px solid #ebebeb; }
+      .is-loading { opacity: .72; cursor: progress; }
+      @media (max-width: 743px) {
+        .page { width: min(100% - 32px, 620px); padding: 32px 0 42px; }
+        .workspace { grid-template-columns: 1fr; gap: 16px; }
+        .panel { min-height: auto; padding: 22px; border-radius: 16px; }
+        textarea { min-height: 240px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="masthead">
+        <p class="eyebrow">마음 돌봄</p>
+            <h1>오늘의 마음을<br>편안하게 들려주세요.</h1>
+        <p class="lead">지금 느끼는 마음과 상황을 적어 주시면, 신앙 안에서 함께 생각해 볼 수 있는 따뜻한 답변을 전해 드립니다.</p>
+      </header>
+      <div class="workspace">
+        <section class="panel" aria-labelledby="compose-title">
+          <div class="panel-head">
+            <div><h2 id="compose-title">상담 내용</h2><p class="panel-note">부담 없이, 있는 그대로 적어 주세요.</p></div>
+          </div>
+          <form id="counseling-form">
+            <label for="message">나누고 싶은 이야기</label>
+            <textarea id="message" name="message" placeholder="지금 마음에 있는 걱정, 관계의 어려움, 기도 제목을 적어 주세요." required></textarea>
+            <div class="actions">
+              <button class="button button-secondary" id="reset-button" type="button">새 상담</button>
+              <button class="button button-primary" id="send-button" type="submit">상담 보내기</button>
+            </div>
+          </form>
+          <p class="status" id="form-status" aria-live="polite"></p>
+        </section>
+        <section class="panel result-panel" aria-labelledby="result-title">
+          <div class="panel-head"><div><h2 id="result-title">답변</h2><p class="panel-note">천천히 읽고, 필요한 부분을 다시 묵상해 보세요.</p></div></div>
+          <article class="answer" id="answer" aria-live="polite"></article>
+          <div class="answer-actions"><button class="button button-secondary" id="copy-button" type="button" disabled>결과 복사</button></div>
+          <p class="status" id="copy-status" aria-live="polite"></p>
+        </section>
+      </div>
+    </main>
+    <script>
+      const WEBHOOK_URL = 'https://n8n.revparkjw.top/webhook/af8097bd-65bf-4cc2-81a9-b3d270e44b41';
+      const form = document.querySelector('#counseling-form');
+      const message = document.querySelector('#message');
+      const answer = document.querySelector('#answer');
+      const sendButton = document.querySelector('#send-button');
+      const resetButton = document.querySelector('#reset-button');
+      const copyButton = document.querySelector('#copy-button');
+      const formStatus = document.querySelector('#form-status');
+      const copyStatus = document.querySelector('#copy-status');
+      let rawMarkdown = '';
+
+      function escapeHtml(value) {
+        return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+      }
+      function isSafeHref(href) { return /^(?:https?:|mailto:|\/|#)/i.test(href); }
+      function renderInline(text) {
+        const saved = [];
+        const save = (markup) => { const token = `\u0000${saved.length}\u0000`; saved.push(markup); return token; };
+        let result = text.replace(/`([^`]+)`/g, (_, code) => save(`<code>${code}</code>`));
+        result = result.replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, (_, label, href) => isSafeHref(href) ? save(`<a href="${href}" rel="noopener noreferrer" target="_blank">${label}</a>`) : label);
+        result = result.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+        return result.replace(/\u0000(\d+)\u0000/g, (_, index) => saved[Number(index)]);
+      }
+      function renderMarkdown(source) {
+        const lines = escapeHtml(source ?? '').replaceAll('\r\n', '\n').split('\n');
+        const output = []; let paragraph = []; let list = null; let fence = null;
+        const flushParagraph = () => { if (paragraph.length) { output.push(`<p>${renderInline(paragraph.join(' '))}</p>`); paragraph = []; } };
+        const flushList = () => { if (list) { output.push(`<${list.type}>\n${list.items.map((item) => `<li>${renderInline(item)}</li>`).join('\n')}\n</${list.type}>`); list = null; } };
+        for (const line of lines) {
+          if (fence) { if (/^```\s*$/.test(line)) { const className = /^[a-z0-9_-]+$/i.test(fence.language) ? ` class="language-${fence.language}"` : ''; output.push(`<pre><code${className}>${fence.lines.join('\n')}</code></pre>`); fence = null; } else fence.lines.push(line); continue; }
+          const fenceMatch = line.match(/^```([^\s]*)\s*$/); if (fenceMatch) { flushParagraph(); flushList(); fence = { language: fenceMatch[1], lines: [] }; continue; }
+          if (!line.trim()) { flushParagraph(); flushList(); continue; }
+          const heading = line.match(/^(#{1,6})\s+(.+)$/); if (heading) { flushParagraph(); flushList(); output.push(`<h${heading[1].length}>${renderInline(heading[2])}</h${heading[1].length}>`); continue; }
+          const quote = line.match(/^&gt;\s?(.*)$/); if (quote) { flushParagraph(); flushList(); output.push(`<blockquote>${renderInline(quote[1])}</blockquote>`); continue; }
+          const unordered = line.match(/^[-*+]\s+(.+)$/); const ordered = line.match(/^\d+\.\s+(.+)$/);
+          if (unordered || ordered) { flushParagraph(); const type = unordered ? 'ul' : 'ol'; if (!list || list.type !== type) { flushList(); list = { type, items: [] }; } list.items.push((unordered ?? ordered)[1]); continue; }
+          flushList(); paragraph.push(line.trim());
+        }
+        if (fence) { const className = /^[a-z0-9_-]+$/i.test(fence.language) ? ` class="language-${fence.language}"` : ''; output.push(`<pre><code${className}>${fence.lines.join('\n')}</code></pre>`); }
+        flushParagraph(); flushList(); return output.join('\n');
+      }
+      function setFormStatus(text, error = false) { formStatus.textContent = text; formStatus.classList.toggle('error', error); }
+      function resetCounseling() { form.reset(); rawMarkdown = ''; answer.innerHTML = ''; copyButton.disabled = true; copyStatus.textContent = ''; setFormStatus('새 상담을 시작할 수 있습니다.'); message.focus(); }
+      async function copyResult() {
+        if (!rawMarkdown) return;
+        try { await navigator.clipboard.writeText(rawMarkdown); copyStatus.textContent = '답변 원문을 복사했습니다.'; }
+        catch { copyStatus.textContent = '복사하지 못했습니다. 답변을 직접 선택해 복사해 주세요.'; }
+      }
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault(); const text = message.value.trim();
+        if (!text) { setFormStatus('상담 내용을 입력해 주세요.', true); message.focus(); return; }
+        sendButton.disabled = true; sendButton.classList.add('is-loading'); setFormStatus('답변을 기다리고 있습니다.');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
+        try {
+          const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }), signal: controller.signal });
+          if (!response.ok) throw new Error('request');
+          const data = await response.json(); if (typeof data.answer !== 'string' || !data.answer.trim()) throw new Error('answer');
+          rawMarkdown = data.answer; answer.innerHTML = renderMarkdown(rawMarkdown); copyButton.disabled = false; copyStatus.textContent = ''; setFormStatus('답변을 받았습니다.');
+        } catch {
+          const errorMessage = controller.signal.aborted ? '응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.' : '상담 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+          setFormStatus(errorMessage, true);
+        }
+        finally { clearTimeout(timeoutId); sendButton.disabled = false; sendButton.classList.remove('is-loading'); }
+      });
+      resetButton.addEventListener('click', resetCounseling); copyButton.addEventListener('click', copyResult);
+    </script>
+  </body>
+</html>
+
