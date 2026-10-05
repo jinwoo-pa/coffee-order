@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f3ec"><meta name="description" content="이름별 커피 주문과 카페 전달용 집계를 간편하게 관리하세요."><title>커피 모아 · 단체 주문</title><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css"><script type="module" src="./app.js"></script></head>
+<body>
+ <header class="topbar"><a href="./" class="brand"><span class="brand-icon" aria-hidden="true">☕</span> 커피 모아</a><span class="pill">함께 마시는 한 잔</span></header>
+ <main>
+  <div id="storage-warning" class="warning" role="alert" hidden></div>
+  <section class="intro"><p class="eyebrow">COFFEE, TOGETHER</p><h1 id="page-title">주문은 간단하게,<br>커피는 다 함께.</h1><p id="page-description">한 사람씩 담으면, 카페 주문까지 한 번에 정리돼요.</p></section>
+  <nav class="steps" aria-label="주문 진행"><span id="step-entry" class="active">01 <b>주문 담기</b></span><span class="step-line"></span><span id="step-result">02 <b>주문 확인</b></span></nav>
+  <section id="entry-view">
+   <section class="card form-card"><div class="section-heading"><div><p class="eyebrow">ADD A CUP</p><h2 id="form-title">누구의 커피인가요?</h2></div><span class="cup-mark" aria-hidden="true">☕</span></div>
+    <form id="order-form"><label for="name">이름</label><input id="name" name="name" placeholder="예: 김민수" required maxlength="40" autocomplete="off">
+     <label for="coffee">커피 종류</label><select id="coffee" required></select>
+     <div class="options-grid"><fieldset><legend>온도</legend><div class="temperature"><label><input type="radio" name="temperature" value="HOT" required><span>☀ HOT</span></label><label><input type="radio" name="temperature" value="ICE" required><span>❄ ICE</span></label></div></fieldset><div><label for="size">크기</label><select id="size" required></select></div></div>
+     <p id="form-error" class="error" role="alert" hidden></p><button id="add-order" class="primary full" type="submit">＋ 주문 추가</button><button id="cancel-edit" class="text-button full" type="button" hidden>수정 취소</button>
+    </form>
+    <details class="menu-settings"><summary>원하는 메뉴나 크기가 없나요?</summary><form id="choice-form"><label for="choice-type">추가할 항목</label><select id="choice-type"><option value="coffees">커피 종류</option><option value="sizes">크기</option></select><label for="choice-name">항목 이름</label><div class="inline-form"><input id="choice-name" required maxlength="40" placeholder="예: 콜드브루"><button type="submit" class="secondary">추가</button></div><p id="choice-error" class="error" role="alert" hidden></p></form></details>
+   </section>
+   <section class="order-section"><div class="section-heading"><h2>담은 주문 <span id="entry-count" class="count">0</span></h2><span class="muted">한 항목에 한 잔</span></div><div id="order-list"></div><button id="complete" class="primary full" disabled>주문 완료 <span aria-hidden="true">→</span></button></section>
+  </section>
+  <section id="result-view" hidden><div class="result-banner"><span>✓ 주문이 정리됐어요</span><p id="completed-time"></p><strong id="result-total"></strong></div>
+   <section class="card"><div class="section-heading"><div><p class="eyebrow">FOR YOUR GROUP</p><h2>누가 어떤 커피를 시켰나요?</h2></div></div><p class="muted">커피가 나오면 이름별로 확인하고 나눠주세요.</p><div id="personal-list"></div></section>
+   <section class="card cafe-card"><div class="section-heading"><div><p class="eyebrow">FOR THE CAFE</p><h2>카페에 전달할 주문</h2></div><span class="pill">이름 없이</span></div><div id="cafe-list"></div><button id="copy" class="primary full">카페 주문 복사</button><div id="copy-fallback" hidden><label for="copy-text">아래 내용을 길게 눌러 복사해주세요.</label><textarea id="copy-text" readonly rows="7"></textarea></div></section>
+   <div class="result-actions"><button id="modify" class="secondary">주문 수정</button><button id="new-order" class="primary">새 주문 시작</button></div>
+  </section>
+  <aside class="storage-note"><span aria-hidden="true">▣</span><p>최근 주문은 이 브라우저에 보관돼요.<br>다시 열어도 이름별 주문을 확인할 수 있어요.</p></aside>
+  <footer><button id="delete-orders" class="text-button">주문내역 삭제</button><span>·</span><button id="reset" class="text-button">앱 전체 초기화</button><p>브라우저 데이터를 지우면 주문도 삭제됩니다.</p></footer>
+ </main>
+ <div id="toast" class="toast" role="status" hidden></div>
+ <dialog id="confirm-dialog" aria-labelledby="dialog-title"><h2 id="dialog-title"></h2><p id="dialog-description"></p><div class="dialog-actions"><button id="dialog-cancel" class="secondary">취소</button><button id="dialog-confirm" class="danger">삭제하고 계속</button></div></dialog>
+</body></html>
