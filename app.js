@@ -7,14 +7,13 @@ function warn(message){$('storage-warning').textContent=message;$('storage-warni
 function persist(){if(!saveState(storage,state))warn('주문을 저장하지 못했어요. 현재 화면에서는 계속 사용할 수 있지만, 창을 닫으면 주문이 사라질 수 있어요.');else $('storage-warning').hidden=true;}
 function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,3000);}
 function element(tag,text,className){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;}
-function fillSelect(id,choices){const select=$(id);const previous=select.value;select.replaceChildren(new Option(id==='coffee'?'커피를 선택해주세요':'크기를 선택해주세요',''));for(const value of choices)select.add(new Option(value,value));if(choices.includes(previous))select.value=previous;}
+function fillSelect(id,choices){const select=$(id);const previous=select.value;select.replaceChildren();if(id==='coffee')select.add(new Option('커피를 선택해주세요',''));for(const value of choices)select.add(new Option(value,value,id==='size'&&value==='기본',false));if(choices.includes(previous))select.value=previous;else if(id==='size')select.value=choices.includes('기본')?'기본':choices[0];}
 function resetEdit(){editId=null;$('form-title').textContent='누구의 커피인가요?';$('add-order').textContent='＋ 주문 추가';$('cancel-edit').hidden=true;$('form-error').hidden=true;$('order-form').reset();}
 function render(){
  fillSelect('coffee',state.coffees);fillSelect('size',state.sizes);
  $('entry-view').hidden=state.completed;$('result-view').hidden=!state.completed;
  $('step-entry').classList.toggle('active',!state.completed);$('step-result').classList.toggle('active',state.completed);
- $('page-title').replaceChildren(...(state.completed?[element('span','모두의 커피,'),element('br'),element('span','한눈에 확인하세요.')]:[element('span','주문은 간단하게,'),element('br'),element('span','커피는 다 함께.')]));
- $('page-description').textContent=state.completed?'주문할 때도, 커피를 나눌 때도 이 목록 하나면 돼요.':'한 사람씩 담으면, 카페 주문까지 한 번에 정리돼요.';
+ $('page-title').textContent=state.completed?'주문 확인':'단체 커피 주문';
  $('entry-count').textContent=state.orders.length;$('complete').disabled=!state.orders.length;$('delete-orders').disabled=!state.orders.length;
  $('order-list').replaceChildren();
  if(!state.orders.length){const empty=element('div',undefined,'empty');empty.append(element('span','☕','empty-icon'),element('p','아직 담은 주문이 없어요.'),element('small','첫 번째 커피를 담아보세요.'));$('order-list').append(empty);}

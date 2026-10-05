@@ -2,13 +2,13 @@
 <html lang="ko">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f3ec"><meta name="description" content="이름별 커피 주문과 카페 전달용 집계를 간편하게 관리하세요."><title>커피 모아 · 단체 주문</title><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css"><script type="module" src="./app.js"></script></head>
 <body>
- <header class="topbar"><a href="./" class="brand"><span class="brand-icon" aria-hidden="true">☕</span> 커피 모아</a><span class="pill">함께 마시는 한 잔</span></header>
+ <header class="topbar"><a href="./" class="brand"><span class="brand-icon" aria-hidden="true">☕</span> 커피 모아</a><span class="muted">단체 주문</span></header>
  <main>
   <div id="storage-warning" class="warning" role="alert" hidden></div>
-  <section class="intro"><p class="eyebrow">COFFEE, TOGETHER</p><h1 id="page-title">주문은 간단하게,<br>커피는 다 함께.</h1><p id="page-description">한 사람씩 담으면, 카페 주문까지 한 번에 정리돼요.</p></section>
+  <section class="intro"><h1 id="page-title">단체 커피 주문</h1></section>
   <nav class="steps" aria-label="주문 진행"><span id="step-entry" class="active">01 <b>주문 담기</b></span><span class="step-line"></span><span id="step-result">02 <b>주문 확인</b></span></nav>
   <section id="entry-view">
-   <section class="card form-card"><div class="section-heading"><div><p class="eyebrow">ADD A CUP</p><h2 id="form-title">누구의 커피인가요?</h2></div><span class="cup-mark" aria-hidden="true">☕</span></div>
+   <section class="card form-card"><div class="section-heading"><h2 id="form-title">누구의 커피인가요?</h2></div>
     <form id="order-form"><label for="name">이름</label><input id="name" name="name" placeholder="예: 김민수" required maxlength="40" autocomplete="off">
      <label for="coffee">커피 종류</label><select id="coffee" required></select>
      <div class="options-grid"><fieldset><legend>온도</legend><div class="temperature"><label><input type="radio" name="temperature" value="HOT" required><span>☀ HOT</span></label><label><input type="radio" name="temperature" value="ICE" required><span>❄ ICE</span></label></div></fieldset><div><label for="size">크기</label><select id="size" required></select></div></div>

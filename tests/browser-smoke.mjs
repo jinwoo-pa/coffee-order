@@ -9,11 +9,16 @@ const context=await browser.newContext({viewport:{width:390,height:844},isMobile
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await mkdir('output/playwright',{recursive:true});
 await page.goto(appUrl);
+assert.equal(await page.locator('#size').inputValue(),'기본');
+assert.ok((await page.locator('.form-card').boundingBox()).y<150,'compact header');
 await page.screenshot({path:'output/playwright/mobile-entry.png',fullPage:true});
 assert.equal(await page.locator('#complete').isDisabled(),true);
-async function add(name,coffee,temp,size){await page.locator('#name').fill(name);await page.locator('#coffee').selectOption(coffee);await page.locator(`input[value="${temp}"]`).check();await page.locator('#size').selectOption(size);await page.locator('#add-order').click();}
-await add('민수','아메리카노','ICE','기본');await add('지영','아메리카노','ICE','기본');await add('민수','아메리카노','HOT','크게');
+async function add(name,coffee,temp,size){await page.locator('#name').fill(name);await page.locator('#coffee').selectOption(coffee);await page.locator(`input[value="${temp}"]`).check();if(size)await page.locator('#size').selectOption(size);await page.locator('#add-order').click();assert.equal(await page.locator('#size').inputValue(),'기본');}
+await add('민수','아메리카노','ICE');await add('지영','아메리카노','ICE');await add('민수','아메리카노','HOT','크게');
 await page.reload();assert.equal(await page.locator('.order-row').count(),3);
+assert.equal(await page.locator('#size').inputValue(),'기본');
+assert.ok((await page.locator('.order-row').first().boundingBox()).y<700,'orders visible sooner');
+await page.locator('[data-action="edit"]').last().click();assert.equal(await page.locator('#size').inputValue(),'크게');await page.locator('#cancel-edit').click();assert.equal(await page.locator('#size').inputValue(),'기본');
 await page.locator('#complete').click();assert.equal(await page.locator('#result-view').isVisible(),true);
 assert.equal(await page.locator('.person').count(),2);assert.equal(await page.locator('.cafe-row').count(),2);assert.ok((await page.locator('#cafe-list').innerText()).includes('2잔'));
 await page.reload();assert.equal(await page.locator('#result-view').isVisible(),true);assert.ok((await page.locator('#personal-list').innerText()).includes('민수'));
