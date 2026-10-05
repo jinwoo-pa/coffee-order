@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 const {chromium}=await import(pathToFileURL(process.env.PLAYWRIGHT_MODULE).href);
+const appUrl=process.env.APP_URL||'http://127.0.0.1:4173';
 const browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
 const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await mkdir('output/playwright',{recursive:true});
-await page.goto('http://127.0.0.1:4173');
+await page.goto(appUrl);
 await page.screenshot({path:'output/playwright/mobile-entry.png',fullPage:true});
 assert.equal(await page.locator('#complete').isDisabled(),true);
 async function add(name,coffee,temp,size){await page.locator('#name').fill(name);await page.locator('#coffee').selectOption(coffee);await page.locator(`input[value="${temp}"]`).check();await page.locator('#size').selectOption(size);await page.locator('#add-order').click();}
